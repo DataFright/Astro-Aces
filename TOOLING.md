@@ -57,6 +57,22 @@ was already running when the bridge came up won't have them; start a fresh sessi
   conclude "hung" from one long wait — poll patiently (`Time.frameCount` via `execute_code`,
   not the `editor/state` resource) for at least 20-30s before considering `stop` + a fresh
   `refresh_unity` + retry. That recovery has worked every time it's been needed.
+- **2026-08-23 — this got worse than previously documented, twice in one session, and a real
+  console error showed up alongside it.** Two consecutive `play` attempts each sat frozen at
+  `Time.frameCount == 2` for 30+ real seconds (`editor/state` agreeing: `is_changing: true`
+  the whole time), each requiring the full `stop` + `refresh_unity(force)` + retry recovery —
+  not just a longer wait. The **third** attempt (after the second recovery) worked normally.
+  Separately, `read_console` after that session's Play Mode work showed five identical
+  `"An abnormal situation has occurred: the PlayerLoop internal function has been called
+  recursively"` entries — a genuine Unity-internal warning, not a project bug (nothing in
+  project code touches the player loop directly), plausibly related to calling `execute_code`
+  to poll `Time.frameCount` repeatedly while the Editor was unfocused and mid-transition, but
+  not confirmed as the cause. Didn't chase it further since it didn't block anything (tests
+  still ran and passed, screenshots still worked) — noting it here in case it recurs and
+  becomes worth reporting to Unity or the MCP bridge's maintainers. **Practical update:** if
+  one `stop` + `refresh_unity` + retry doesn't recover a stuck transition within ~30s, don't
+  assume something is fundamentally broken — try the same recovery a second time before
+  escalating; it worked on the second attempt here.
 
 ---
 

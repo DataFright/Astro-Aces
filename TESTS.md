@@ -44,7 +44,7 @@ and confirmed this the hard way before finding `InputTestFixture`). Run via the 
 | `MessageLog_ShowsOnAirbrakeToggle_ThenFadesToZero` | `HudPlayModeTests.cs` | toggling airbrakes shows "AIRBRAKES DOWN" at full alpha; alpha is back to 0 three seconds later | Phase 5 (`MessageLog`) |
 | `OutsideBounds_PushesBackTowardCentre_AndShowsWarning` | `PlayAreaBoundsPlayModeTests.cs` | teleporting (via `rb.position`, not `transform.position` — see `TOOLING.md`) past the 2500m boundary shows "RETURN TO PLAY AREA" and measurably reduces the outward velocity within 2 physics steps | Phase 6 (`PlayAreaBounds`) |
 | `FreeLook_MouseMovement_DoesNotChangeFlightDirection` | `AimTrackingPlayModeTests.cs` | holding right mouse + moving the mouse barely changes `DesiredDirection` (<0.5°); normal mouse-driven aim still works immediately after release | AA-009 (free-look silently steering the aircraft too) |
-| `FreeLook_OrbitsAroundShip_NotJustRotatesInPlace` | `ChaseCameraPlayModeTests.cs` | freezes the rig's Rigidbody, then holding right mouse + mouse delta moves the camera's actual position (>3m), the camera ends up looking back at the ship (<15° off), and holds roughly the original orbit distance (within 30%, checked after a short settle window past the break condition) | AA-010 (free-look orbited its own fixed spot, camera position never actually moved around the ship) |
+| `FreeLook_OrbitsAroundShip_NotJustRotatesInPlace` | `ChaseCameraPlayModeTests.cs` | freezes the rig's Rigidbody, then holding right mouse + mouse delta moves the camera's actual position (>3m), the camera ends up looking back at the ship (<15° off), and holds `ChaseCamera.FreeLookOrbitDistance` (within 30%, checked after a short settle window past the break condition) | AA-010 (free-look orbited its own fixed spot, camera position never actually moved around the ship); updated 2026-08-23 to check against `FreeLookOrbitDistance` instead of the pre-orbit chase distance, once free-look started deliberately orbiting closer than the chase spot |
 
 All twelve passed 2026-08-22 — see `BUGS.md` AA-004/AA-007/AA-008/AA-009/AA-010 and
 `BUILD_PLAN.md`'s Phase 4/5/6 sections for full result detail.
@@ -176,6 +176,14 @@ These exist because a sign error here reads as "the physics is broken" and costs
   than continuing to guess at the test. Fixed by going through `rb.position`/`rb.rotation`
   instead — full writeup in `TOOLING.md`, since it's a generalizable Unity gotcha, not
   specific to this one test. All ten PlayMode tests pass.
+
+- **2026-08-23** — `FreeLook_OrbitsAroundShip_NotJustRotatesInPlace`'s distance assertion
+  updated: it used to check the orbit held roughly the *same* distance as the normal chase
+  spot, which stopped being correct once free-look was retuned to deliberately orbit closer
+  (`ChaseCamera.FreeLookOrbitDistance`, 4.5m vs. the ~6.3m chase distance — see `DESIGN.md`
+  §5's log). Added a public `FreeLookOrbitDistance` property so the test reads the real
+  configured value instead of hardcoding one that could drift out of sync. All 12 PlayMode
+  tests still pass.
 
 - **2026-08-22 (same session, one more still) — One more for AA-010, free-look orbiting its
   own spot instead of the ship.** `FreeLook_OrbitsAroundShip_NotJustRotatesInPlace` failed

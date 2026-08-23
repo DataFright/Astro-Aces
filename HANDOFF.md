@@ -1,6 +1,6 @@
 # Astro Aces — Handoff
 
-**Last updated:** 2026-08-22 (Phases 0-6 all done; Phase 7 next)
+**Last updated:** 2026-08-23 (Phases 0-6 all done; Phase 7 next; camera distances retuned)
 
 **Unity MCP is live.** `Window > MCP for Unity` (Ctrl+Shift+M), server running, auto-start
 on, health check green, `claude mcp list` shows `UnityMCP: Connected`. Tools (scene control,
@@ -232,5 +232,22 @@ archiving policy going forward.
   **Lesson:** "gitignore it going forward" and "it's no longer in the repo" are different
   claims — the second one requires checking (and if necessary rewriting) history, not just
   the current commit, especially once something has already been pushed.
+
+- **2026-08-23** — Camera distances retuned per direct user feedback: both the default chase
+  view and the free-look inspect view were "too far back." Chase offset 8m/3m → 6m/2m,
+  `positionLerpPerSecond` 8 → 12 (cuts the documented cruise-speed follow lag roughly in
+  half). Free-look now orbits at its own `freeLookOrbitDistance` (4.5m) instead of reusing the
+  chase offset's magnitude (~8.5m before), since "look around from the chase spot" and
+  "inspect the ship up close" turned out to want different distances. This also required
+  fixing the scene's already-serialized `ChaseCamera` component (changing a script's default
+  value doesn't retroactively update values Unity already saved on the component instance)
+  and updating `ChaseCameraPlayModeTests`'s orbit-distance assertion, which had been checking
+  "same distance as chase" — no longer correct now that free-look targets a different distance
+  on purpose. Verified live via a Unity MCP screenshot (ship's wing/canopy detail clearly
+  visible at the new free-look distance, versus barely resolvable before) and all 12 PlayMode
+  tests passing. Full derivation in `DESIGN.md` §5's log; the Play Mode session needed two
+  stuck-transition recoveries first — see `TOOLING.md`'s new 2026-08-23 entry. **First pass,
+  not a final feel call** — these numbers are what looked reasonable from the tightened math
+  plus one screenshot, not something the user has flown yet.
 
 **Phase 7 (Weapons) is next.**

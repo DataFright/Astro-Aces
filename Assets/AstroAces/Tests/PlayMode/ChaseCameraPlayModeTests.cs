@@ -167,10 +167,17 @@ namespace AstroAces.Tests.PlayMode
                 $"While orbiting, the camera should be looking back at the ship -- still " +
                 $"{lookAngle:F1} deg off after 8 real seconds.");
 
+            // Free-look deliberately orbits CLOSER than the normal chase spot, not at the
+            // same distance -- ChaseCamera.FreeLookOrbitDistance (2026-08-23: 4.5m, vs. the
+            // ~6.3m chase offset) is the actual target, so check against that, not against
+            // distanceBefore (which is the pre-orbit chase distance and no longer what this
+            // path is supposed to reach). distanceBefore is still asserted separately above
+            // (via positionDelta) to confirm the camera actually moved from its chase spot.
             float distanceDuring = Vector3.Distance(positionDuring, rig.transform.position);
-            Assert.Less(Mathf.Abs(distanceDuring - distanceBefore), distanceBefore * 0.3f,
-                $"Orbit should hold roughly the same distance from the ship ({distanceBefore:F1}m " +
-                $"before), not fly off or collapse inward -- now {distanceDuring:F1}m.");
+            float expectedOrbitDistance = chaseCam.FreeLookOrbitDistance;
+            Assert.Less(Mathf.Abs(distanceDuring - expectedOrbitDistance), expectedOrbitDistance * 0.3f,
+                $"Orbit should settle at the configured free-look distance ({expectedOrbitDistance:F1}m), " +
+                $"not fly off or collapse further inward -- now {distanceDuring:F1}m.");
 
             Release(mouse.rightButton);
         }

@@ -270,13 +270,14 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: AstroAces.Runtime::AstroAces.UI.ChaseCamera
   target: {fileID: 500002}
-  localOffset: {x: 0, y: 3, z: -8}
-  positionLerpPerSecond: 8
+  localOffset: {x: 0, y: 2, z: -6}
+  positionLerpPerSecond: 12
   rotationSlerpPerSecond: 10
   freeLookSensitivity: 0.15
   maxFreeLookYawDeg: 120
   maxFreeLookPitchDeg: 70
   freeLookReturnSeconds: 0.25
+  freeLookOrbitDistance: 4.5
   normalFieldOfView: 60
   zoomedFieldOfView: 24
   nearClip: 0.3

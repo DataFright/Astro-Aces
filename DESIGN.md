@@ -316,16 +316,19 @@ capped both maneuvers partway through; see `BUGS.md` AA-004/AA-005.
 
 # 5. Camera
 
-Third-person chase, **8 m back and 3 m up**, smoothed follow (position lerp ≈ 8/s, rotation
-≈ 10/s) so it trails the aircraft rather than sticking rigidly to it. Runs in `LateUpdate`;
-the Rigidbody uses interpolation, so anything earlier judders.
+Third-person chase, **6 m back and 2 m up** (tightened from 8/3 on 2026-08-23 — see the log),
+smoothed follow (position lerp ≈ 12/s, rotation ≈ 10/s) so it trails the aircraft rather than
+sticking rigidly to it. Runs in `LateUpdate`; the Rigidbody uses interpolation, so anything
+earlier judders.
 
 - **Free-look:** holding right click orbits the camera around the aircraft up to ±120°
   yaw / ±70° pitch — the camera's **position** swings around the aircraft to a new vantage
-  point at the same distance (not just a look-direction pan from the fixed chase spot; see
-  `BUGS.md` AA-010, where the first implementation got this distinction wrong). Releasing
-  returns it over ~0.25 s. Flight direction is untouched (see `BUGS.md` AA-009 for the
-  matching mistake on that side).
+  point (not just a look-direction pan from the fixed chase spot; see `BUGS.md` AA-010, where
+  the first implementation got this distinction wrong). The orbit distance is **4.5 m** —
+  deliberately tighter than the chase distance, not the same (see the 2026-08-23 log entry):
+  free-look's job is close inspection of the ship, not just looking around from the chase
+  spot. Releasing returns it over ~0.25 s. Flight direction is untouched (see `BUGS.md` AA-009
+  for the matching mistake on that side).
 - **Zoom:** Caps Lock toggles FOV 60 → 24 (2.5×).
 - **Clip planes:** near 0.3, far **12,000** — the play area is 5 km across and the sky must
   not clip.
@@ -460,6 +463,24 @@ unwary implementation will make.
 ---
 
 ## Log
+
+- **2026-08-23 — §5 camera distances tightened, both retuned separately.** User: "not super
+  happy with the camera position, its kinda far back and the hold right click to free view
+  too look around and inspect your ship is still too far back to view it proper" — two
+  distinct complaints, given two distinct fixes. (1) Default chase offset: 8m back/3m up →
+  6m back/2m up, and `positionLerpPerSecond` 8 → 12 (also tightens the documented cruise-speed
+  follow lag, `HANDOFF.md`'s Phase 4 entry — lag ≈ speed/lerp-rate, so ~14m → ~9.5m at cruise).
+  (2) Free-look orbit: previously reused the chase offset's own magnitude (~8.5m before this
+  change), which was never actually right for "inspect the ship up close" — gave it its own
+  `freeLookOrbitDistance` field (4.5m) instead of deriving it from the chase distance, so the
+  two can be tuned independently going forward. Verified two ways before handoff: a live
+  screenshot via Unity MCP showing the ship's wing/canopy detail clearly at the new free-look
+  distance (vs. barely resolvable before), and `ChaseCameraPlayModeTests`'s orbit-distance
+  assertion, which had been checking the orbit stayed within 30% of the *chase* distance — no
+  longer correct once free-look intentionally targets a different distance, so it now checks
+  against the new `ChaseCamera.FreeLookOrbitDistance` property instead. All 12 PlayMode tests
+  pass. Numbers are a first pass, not a final feel decision — waiting on the user's own
+  in-editor read before calling this settled.
 
 - **2026-08-22 (later still) — §5 clarified: free-look's orbit is a real position change, not
   just a look-direction pan.** The first `ChaseCamera` implementation composed the free-look

@@ -231,10 +231,13 @@ low speed mushes rather than snapping into a spin.
 
 ## Phase 4 — Camera — **DONE, 2026-08-22**
 
-`Scripts/UI/ChaseCamera.cs`, `LateUpdate`. Offset (0, 3, −8) in aircraft space, position
-`Lerp` ≈ 8/s, rotation `Slerp` ≈ 10/s. Free-look accumulates yaw/pitch from mouse delta
-while `FreeLookHeld` (±120° / ±70°), returning to zero over ~0.25 s on release. Caps Lock
-toggles FOV 60 ↔ 24. Camera: near 0.3, far **12,000**, culling mask `Layers.MainCameraMask`.
+`Scripts/UI/ChaseCamera.cs`, `LateUpdate`. Offset (0, 2, −6) in aircraft space, position
+`Lerp` ≈ 12/s, rotation `Slerp` ≈ 10/s (tightened 2026-08-23 from the original 8/3/8 spec —
+see `DESIGN.md` §5's log). Free-look accumulates yaw/pitch from mouse delta while
+`FreeLookHeld` (±120° / ±70°), orbiting at its own `freeLookOrbitDistance` (4.5 m, tighter
+than the chase distance — added 2026-08-23) rather than the chase offset's own magnitude,
+returning to zero over ~0.25 s on release. Caps Lock toggles FOV 60 ↔ 24. Camera: near 0.3,
+far **12,000**, culling mask `Layers.MainCameraMask`.
 
 Built as specified above, exactly. Un-parented `Main Camera` from the Phase 2 placeholder
 rig-parenting hack, added `ChaseCamera`, wired `target` to the test rig. Both position and
@@ -643,3 +646,11 @@ the layer at fault *before* touching a number. Log every value change in `DESIGN
   between irregular render frames (fixed by freezing the rig's Rigidbody for the test), and
   `Vector3.Lerp` dipping inside the orbit sphere mid-transition (fixed by settling briefly
   past the test's early-break point before measuring distance). All 12 PlayMode tests pass.
+
+- **2026-08-23 — Camera distances retuned, off the back of direct user feedback ("too far
+  back" for both the default chase view and free-look inspection).** Chase offset 8/3 → 6/2
+  with `positionLerpPerSecond` 8 → 12; free-look given its own `freeLookOrbitDistance` (4.5m)
+  instead of reusing the chase offset's magnitude. Updated `ChaseCameraPlayModeTests`'s orbit
+  distance assertion to match (it had asserted "same distance as chase," which is no longer
+  the design). Verified via a live Unity MCP screenshot and all 12 PlayMode tests passing —
+  full detail in `DESIGN.md` §5's log and `HANDOFF.md`.

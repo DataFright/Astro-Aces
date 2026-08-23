@@ -34,10 +34,10 @@ namespace AstroAces.UI
         [SerializeField] Transform target;
 
         [Header("Follow")]
-        [Tooltip("Offset from the target in the TARGET's own local space: 3m up, 8m back.")]
-        [SerializeField] Vector3 localOffset = new Vector3(0f, 3f, -8f);
-        [Tooltip("Position follow rate, 1/second. Higher = tighter follow.")]
-        [SerializeField] float positionLerpPerSecond = 8f;
+        [Tooltip("Offset from the target in the TARGET's own local space: 2m up, 6m back.")]
+        [SerializeField] Vector3 localOffset = new Vector3(0f, 2f, -6f);
+        [Tooltip("Position follow rate, 1/second. Higher = tighter follow (less cruise-speed lag).")]
+        [SerializeField] float positionLerpPerSecond = 12f;
         [Tooltip("Rotation follow rate, 1/second. Higher = snappier turning.")]
         [SerializeField] float rotationSlerpPerSecond = 10f;
 
@@ -47,6 +47,10 @@ namespace AstroAces.UI
         [SerializeField] float maxFreeLookPitchDeg = 70f;
         [Tooltip("Seconds to return to centre after releasing free look.")]
         [SerializeField] float freeLookReturnSeconds = 0.25f;
+        [Tooltip("Orbit distance while free-looking -- deliberately tighter than the normal " +
+                 "chase offset, since this is meant for inspecting the ship up close, not just " +
+                 "looking around from the chase spot.")]
+        [SerializeField] float freeLookOrbitDistance = 4.5f;
 
         [Header("Zoom (Caps Lock)")]
         [SerializeField] float normalFieldOfView = 60f;
@@ -55,6 +59,11 @@ namespace AstroAces.UI
         [Header("Clip Planes")]
         [SerializeField] float nearClip = 0.3f;
         [SerializeField] float farClip = 12000f;
+
+        /// <summary>Exposed read-only for PlayMode tests to check the orbit distance
+        /// against, rather than hardcoding a value that would silently drift out of sync
+        /// with the serialized default.</summary>
+        public float FreeLookOrbitDistance => freeLookOrbitDistance;
 
         Camera cam;
         AircraftInput input;   // null-guarded -- absent on an AI-piloted target
@@ -127,11 +136,11 @@ namespace AstroAces.UI
             // user 2026-08-22 as "not true free look": it let you look behind you, but not
             // actually swing around to see the wings, underside or cockpit, since the camera
             // never left its spot behind the tail. Orbit the camera around the aircraft
-            // instead, at the same distance as the normal chase offset, and look back at the
-            // aircraft from wherever that lands -- at zero free-look this reduces to exactly
-            // the same position, but a non-zero offset actually rotates the camera's position
-            // to a new vantage point around the ship, not just a new look direction from the
-            // old one.
+            // instead, and look back at the aircraft from wherever that lands. Originally
+            // orbited at the same distance as the normal chase offset; the user reported
+            // 2026-08-22 that was still too far to actually inspect the ship, so free-look now
+            // has its own tighter orbit radius (freeLookOrbitDistance) -- same up/back shape as
+            // the chase offset (normalized direction preserved), just closer.
             bool orbiting = Mathf.Abs(freeLookYawDeg) > 0.05f || Mathf.Abs(freeLookPitchDeg) > 0.05f;
 
             Vector3 desiredPosition;
@@ -140,7 +149,7 @@ namespace AstroAces.UI
             if (orbiting)
             {
                 Quaternion freeLookOffset = Quaternion.Euler(freeLookPitchDeg, freeLookYawDeg, 0f);
-                Vector3 orbitOffset = freeLookOffset * localOffset;
+                Vector3 orbitOffset = freeLookOffset * (localOffset.normalized * freeLookOrbitDistance);
                 desiredPosition = target.TransformPoint(orbitOffset);
 
                 Vector3 toTarget = target.position - desiredPosition;
