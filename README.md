@@ -74,11 +74,33 @@ red**.
 
 ---
 
+## Third-party assets
+
+Five Asset Store packs are used by the project but **not committed to this repo** —
+`Assets/Dynamic Music`, `Assets/BTM_Assets`, `Assets/Casual Game Sounds U6`,
+`Assets/Omega_fighterG`, `Assets/SimpleNaturePack` are all gitignored, since this repo is
+public and their licenses don't permit redistributing the raw files. Cloning this repo alone
+will **not** give you a project that opens cleanly in Unity — the scene references models,
+materials and audio clips from those packs, and you'd need to re-import each one from the
+Asset Store yourself into the matching `Assets/` folder name before `Dogfight.unity` will
+load without missing-reference errors.
+
+---
+
+## License
+
+No license is granted. All rights reserved. This repo is public for visibility, not for
+reuse — code and assets here may not be copied, forked, or redistributed without permission.
+(This doesn't apply to the third-party asset packs above, which were never included here and
+remain under their own respective licenses regardless.)
+
+---
+
 ## Status
 
 Foundation phase. The flight maths, tuning config, project setup tooling and build plan
-exist and compile; the gameplay layer on top of them is not built yet. Audio is wired but
-**muted** deliberately. There is no version control on this project yet, by choice.
+exist and compile; Phases 0–6 are done (see `HANDOFF.md`), the gameplay layer above them
+(weapons, damage, AI) is not built yet. Audio is wired but **muted** deliberately.
 
 ---
 
@@ -92,3 +114,11 @@ exist and compile; the gameplay layer on top of them is not built yet. Audio is 
   about the Unity MCP bridge, writing/running Play Mode tests without a human, and using the
   vendored UTI toolkit — split out from `BUGS.md`/`HANDOFF.md` log entries where it had been
   accumulating, since it's about the tools themselves rather than game bugs or mechanics.
+
+- **2026-08-22 (later)** — Repo went public on GitHub this session (`HANDOFF.md` has the full
+  setup story, including a licensing scare: several third-party Asset Store packs had been
+  committed and had to be gitignored and purged from history). Added the **Third-party
+  assets** and **License** sections above to reflect that — no license is granted (all rights
+  reserved, public for visibility only), and five Asset Store packs are used locally but
+  intentionally excluded from the repo. Updated the Status section, which still claimed no
+  version control existed.
