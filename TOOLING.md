@@ -73,6 +73,16 @@ was already running when the bridge came up won't have them; start a fresh sessi
   one `stop` + `refresh_unity` + retry doesn't recover a stuck transition within ~30s, don't
   assume something is fundamentally broken — try the same recovery a second time before
   escalating; it worked on the second attempt here.
+- **2026-08-23 — formally ticketed as `BUGS.md` AA-012**, at the user's explicit request,
+  since this had only ever been noted here informally before. That entry has a fresh,
+  timestamped reproduction and the fuller picture — including that `Time.frameCount` reading
+  frozen doesn't always mean total stall; confirmed separately that the simulation can also
+  run at a tiny fraction of real speed while unfocused (a screenshot's HUD value changed
+  slightly across two captures 10 real seconds apart, while `Time.frameCount` read identically
+  both times). Also recorded there: no OS-level desktop mouse/window automation tool is
+  available in this environment (the two `computer` tools that exist both control browser
+  surfaces, not the native Unity Editor window), so testing "does focusing the window fix it"
+  needs an actual human click, not something this session can do itself.
 
 ---
 

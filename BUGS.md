@@ -8,6 +8,80 @@ One entry per bug, kept until proven closed. Every entry names the test that pro
 
 ## Open
 
+### AA-012 — Unity Play Mode simulation doesn't tick while the Editor window is unfocused (tooling/environment, not game code)
+**Status:** OPEN · found 2026-08-22/23, across multiple sessions this week (informally noted in
+`TOOLING.md` before this ticket existed) · formally ticketed 2026-08-23 at the user's explicit
+request ("is there a bug for this? a tracked... make a ticket") · reproduced fresh, with
+timestamps, in this same session
+
+**This is an environment/tooling problem, not a bug in `AstroAces.Runtime` game code** —
+tracked here as a ticket per the user's explicit request, even though `TOOLING.md` is this
+project's normal home for tool/environment issues (see that doc's own 2026-08-23 entry for
+the original, less formal writeup). Both places should be kept in sync if this changes.
+
+**Symptom:** after `manage_editor action:"play"` reports success, `Time.frameCount`/`Time.time`
+(read live via `execute_code`) can stay **completely frozen** — not slow, literally
+unchanging — for 30+ real seconds, sometimes longer, while `Time.realtimeSinceStartup` (which
+tracks real wall-clock time regardless of simulation state) keeps climbing normally the whole
+time. `mcpforunity://editor/state` agrees: `play_mode.is_playing: true`,
+`play_mode.is_changing: true`, `activity.phase: "playmode_transition"`, `editor.is_focused:
+false`, for the entire stuck duration. The Editor process itself is alive and responsive
+(`execute_code` calls return promptly with correct results for anything not simulation-time
+dependent) — specifically the Play Mode player loop isn't advancing.
+
+**Fresh reproduction, this session, with real timestamps (not reused from an earlier
+session):**
+| Real wall-clock time since `play` requested | `Time.frameCount` | `Time.realtimeSinceStartup` |
+| --- | --- | --- |
+| 0s (play requested) | — | 8.83s |
+| ~4.9s (`editor/state` read) | 2 | — |
+| ~19.7s | 2 | 21.63s |
+| ~35.4s | 2 | 37.33s |
+
+`Time.frameCount` never moved off `2` across the entire 35+ second window, while
+`realtimeSinceStartup` advanced by roughly the same amount as real elapsed time — the Editor
+is doing *something* every second, just not advancing the Play Mode simulation.
+
+**Not a total freeze — confirmed separately, same session:** in an earlier reproduction
+today, the rendered Game view and physics state *were* slowly progressing despite
+`Time.frameCount` reading stuck (AOA ticked 0.0°→0.1° across two screenshots taken 10 real
+seconds apart, while `Time.frameCount` read identically both times). So the simulation isn't
+always fully halted — it can also run at a tiny fraction of normal speed while unfocused,
+which is arguably worse for diagnosis than a clean freeze, since `Time.frameCount` alone can't
+be trusted to distinguish "stalled" from "running at ~1% speed."
+
+**Suspected root cause (not confirmed):** Unity Editor throttling/deprioritizing the Player
+Loop when the Editor window has no OS focus and isn't the active window — a documented general
+Unity behavior (relevant setting: `Application.runInBackground` / Editor's own background
+throttling), plausibly worse in this specific environment because the Editor is never actually
+focused by a human during most autonomous sessions. **Not yet tested**: whether OS-level
+window focus (bringing the Unity Editor window to the foreground) fixes it, because doing so
+requires real desktop mouse/window control that isn't available in this session — see below.
+
+**What's blocked and why:** the user asked to reproduce this live, then move the mouse to the
+Unity Editor's Game view and left-click, to test whether focusing the window unsticks the
+simulation. Checked what's actually available this session: `mcp__Claude_Browser__computer`
+and `mcp__claude-in-chrome__computer` both control a browser surface (this app's sandboxed
+Browser pane, or a real Chrome tab respectively) — neither can reach a native desktop
+application window like the Unity Editor. There is no general OS-level mouse/window
+automation tool available. **This specific test needs a human to actually click into the
+Unity Editor**, which is the same "no GUI control over the Unity window" limitation noted
+repeatedly throughout this project's history (e.g. `HANDOFF.md`'s 2026-08-17 15:39 entry).
+
+**Documented workaround (already in `TOOLING.md`), not a fix:** `stop` Play Mode, `refresh_unity`
+(mode `force`), retry `play`. Has recovered every time it's been needed so far, sometimes
+needing a second attempt. Recovery time itself is unpredictable while unfocused (confirmed
+30+ seconds on multiple occasions).
+**Verified:** reproduced multiple times across at least two sessions; the specific numbers in
+the table above are from a fresh reproduction with real timestamps, not carried over from
+memory.
+**Guarded by:** nothing automated — this is Editor/environment behavior outside project code,
+not something a PlayMode test can assert against.
+**Lesson:** don't trust `Time.frameCount` alone as evidence of "nothing is happening" — it can
+read frozen while the underlying simulation is genuinely (if very slowly) progressing. Cross-
+check with a real observable (a screenshot's HUD values, `Time.realtimeSinceStartup`, or
+console output) before concluding total stall vs. severe throttling.
+
 ### AA-011 — Free-look camera drifts/leaves the ship off-frame during flight, not just while dragging the mouse
 **Status:** OPEN · found 2026-08-23 by the user, immediately after the 2026-08-23 distance
 retune (see `DESIGN.md` §5's log and `HANDOFF.md`) · root-caused and reproduced by direct
