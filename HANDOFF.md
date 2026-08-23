@@ -208,4 +208,29 @@ archiving policy going forward.
   **If the project starts actually using the Dynamic Music pack later:** remove its line from
   `.gitignore` and commit it deliberately at that point, ideally via Git LFS given the size.
 
+  **Follow-up, same session — found and fixed a real licensing exposure, not just a size
+  one.** Checked the pushed repo's visibility (`public`, confirmed via the GitHub API) and
+  noticed four more third-party Asset Store packs were committed alongside the project's own
+  code: `BTM_Assets`, `Casual Game Sounds U6`, `Omega_fighterG`, `SimpleNaturePack` (~39 MB
+  total — small, unlike Dynamic Music, so this was a licensing problem, not a size one). Most
+  Asset Store EULAs (free or paid) don't permit redistributing the raw files outside your own
+  build, which a public repo does. Asked the user rather than assuming; they confirmed —
+  gitignored all four (plus the leftover `Dynamic Music.meta` orphaned by the earlier commit)
+  alongside Dynamic Music, same pattern: stays on disk, drops out of git.
+
+  That alone wasn't enough, though: those four packs were already in the *first* two pushed
+  commits, so simply removing them from a new commit would have left the raw files still
+  fetchable from GitHub via the earlier commits in history — the actual problem (public
+  redistribution) would have persisted invisibly. Since the repo was only minutes old with no
+  collaborators, the clean fix was to rewrite history rather than patch around it: confirmed
+  with the user first (force-push + history rewrite is always worth confirming, even on a
+  brand-new solo repo), then squashed all commits into a single clean root commit via
+  `git commit-tree` on the already-correct current tree (no `git filter-repo` available in
+  this environment), and force-pushed it over `origin/main`. `.git` went from ~27 MB to
+  3.4 MB; `git log` now shows exactly one commit, and none of the five excluded packs were
+  ever part of any commit reachable from `main`.
+  **Lesson:** "gitignore it going forward" and "it's no longer in the repo" are different
+  claims — the second one requires checking (and if necessary rewriting) history, not just
+  the current commit, especially once something has already been pushed.
+
 **Phase 7 (Weapons) is next.**
