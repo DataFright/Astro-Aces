@@ -8,7 +8,84 @@ One entry per bug, kept until proven closed. Every entry names the test that pro
 
 ## Open
 
-None. See Closed below.
+### AA-011 — Free-look camera drifts/leaves the ship off-frame during flight, not just while dragging the mouse
+**Status:** OPEN · found 2026-08-23 by the user, immediately after the 2026-08-23 distance
+retune (see `DESIGN.md` §5's log and `HANDOFF.md`) · root-caused and reproduced by direct
+inspection + a controlled live repro on the real `ChaseCamera`/rig objects via Unity MCP,
+after two prior attempts (one by a previous session, one earlier this session) each declared
+this "fixed" without actually reproducing the failure — see the Lesson at the bottom.
+
+User provided four screenshots: a standard chase view (called "pretty far back but not too
+bad" — not the bug), and three free-look shots where the ship is pushed toward or off the
+edge of frame — one nearly 50%+ off-screen. Direct quote: "the more we focus the more we
+should see the craft in the center of the screen," matching this project's own free-look
+design intent (`DESIGN.md` §5: free-look exists to inspect the ship up close) — instead the
+opposite happens.
+
+**Root cause**, in `ChaseCamera.UpdateFollow()`'s orbiting branch:
+```csharp
+Vector3 orbitOffset = freeLookOffset * (localOffset.normalized * freeLookOrbitDistance);
+Vector3 desiredPosition = target.TransformPoint(orbitOffset);
+
+Vector3 toTarget = target.position - desiredPosition;   // <- bug: desiredPosition, not the
+desiredRotation = ... Quaternion.LookRotation(toTarget.normalized, target.up) ...           //    camera's actual position
+```
+`desiredRotation` aims from `desiredPosition` — the spot the camera is still travelling
+*toward* — not from `transform.position`, the camera's real current position. Position is
+then separately Lerped toward `desiredPosition` on the next two lines. The two only agree
+once the camera has fully caught up. While the ship is in motion (every real flight — the
+camera is chasing an offset that itself continuously moves with the ship), `desiredPosition`
+never stops advancing, so the camera's real position permanently lags behind it — meaning the
+look direction is *permanently* computed from the wrong point, not just during an active mouse
+drag. This is a steady-state error, not a transient one.
+
+**Replication (reproduced live, not just theorized):** froze the test rig's Rigidbody
+(`isKinematic = true`, same isolation technique as AA-010's test) and drove its `position`
+directly at a constant 114 m/s (documented cruise speed) in a straight line for 2 simulated
+seconds, while holding `ChaseCamera`'s private `freeLookYawDeg`/`freeLookPitchDeg` fields at a
+**fixed** value the whole time (no simulated mouse movement at all, isolating "just flying
+with free-look held steady" from "actively dragging the mouse") — stepped the exact current
+`UpdateFollow()` formulas by hand (`Time.deltaTime` reads as ~0 in this environment's Play
+Mode while unfocused; see `TOOLING.md`'s 2026-08-23 entry, so the real per-frame callback
+can't be relied on to tick fast enough to observe this directly — stepped the identical
+formulas manually against the live objects instead, then disabled the component briefly so
+its own next real (if slow) `LateUpdate` tick didn't stomp the reproduced pose before the
+screenshot could be taken).
+- **Yaw held at 60°, ship flying straight:** ship settles at 18.8% across / 63.7% up the
+  frame (dead centre is 50%/50%) and **stays there indefinitely**, not just briefly —
+  confirmed both numerically (`Camera.WorldToScreenPoint`) and visually
+  (`Assets/Screenshots/screenshot-20260823-112112.png`, taken on the real live camera/rig).
+- **Pitch axis is worse:** sweeping pitch alone (yaw fixed at 0) while flying: pitch 30°
+  already pushes the ship to 104.6% up the frame (just past the top edge), pitch 50° to
+  140.3% (well above the frame — `Assets/Screenshots/screenshot-20260823-112201.png` shows
+  only a sliver of the ship's nose at the very top), pitch 70° to 206.9%. This matches the
+  user's most extreme screenshot ("looking up at the top of the plane... leaving the
+  window") almost exactly.
+- Full numeric sweep (yaw 0→120° over 1s, ship stationary) did **not** show the effect
+  clearly — the steady-state version (ship in motion, free-look angle held constant) is the
+  cleaner, more universally-reproducible trigger, and matches the always-in-flight context of
+  every one of the user's screenshots (200-280 mph in all four).
+
+**Not yet fixed** — documenting first, per explicit user instruction, before any resolution
+work. Direction discussed but not applied: compute the look-at rotation from the camera's
+actual current position (after the position Lerp updates it) and the ship's actual current
+position, not from either one's "desired"/goal value — see `DESIGN.md`'s eventual log entry
+once this is actually resolved and verified, not just proposed.
+**Verified:** reproduced live on the real `ChaseCamera`/rig objects (not a re-simulation) with
+both a numeric screen-space measurement and an actual screenshot for two independent axes
+(yaw, pitch). Not yet fixed, so nothing to verify a fix against yet.
+**Guarded by:** no test yet — this needs a PlayMode test that checks framing *during* motion
+with free-look held steady, not just the final settled state (see the Lesson below for why
+the existing `ChaseCameraPlayModeTests` didn't catch this).
+**Lesson:** this bug was declared fixed twice before being actually reproduced — once by
+tightening the free-look distance (which changed a number but never touched the rotation
+computation), and once mid-session by re-reading the code and reasoning about the mechanism
+without first proving it with reproduction evidence. Both times, verification consisted of
+letting free-look settle to a static angle and checking the *final* state — which structurally
+cannot see this bug, since the error only exists while `desiredPosition` keeps moving, i.e.
+during any real, continuous flight. Reproduce first, with evidence, before declaring root
+cause understood or a fix correct — a plausible mechanism read from the code is not the same
+as a demonstrated one.
 
 ### AA-010 — Free-look orbited the camera's own spot, not around the ship
 **Status:** CLOSED · found 2026-08-22 by the user, immediately after AA-009's fix ("the camera
