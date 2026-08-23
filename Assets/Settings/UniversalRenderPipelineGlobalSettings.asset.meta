@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 18dc0cd2c080841dea60987a38ce93fa
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 11400000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 19970
+  packageName: Space Ship Omega Fighter G
+  packageVersion: 2.3
+  assetPath: Assets/Settings/UniversalRenderPipelineGlobalSettings.asset
+  uploadId: 754825

@@ -1,0 +1,64 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f291bccadec4de44a89f19e717b9eb3a, type: 3}
+  m_Name: EnemyAircraftConfig
+  m_EditorClassIdentifier:
+  massKg: 1000
+  maxThrust: 15000
+  startThrottle: 0.8
+  maxThrottle: 1.1
+  throttleRatePerSecond: 0.6
+  throttleStepPerNotch: 0.05
+  throttleFineStep: 0.01
+  densityScaleHeight: 780
+  minDensity: 0.02
+  liftCoefficient: 3.7
+  dragCoefficient: 0.813
+  sideDragCoefficient: 20
+  airbrakeDragMultiplier: 2.2
+  safeAoADeg: 14
+  criticalAoADeg: 20
+  postStallAoADeg: 45
+  postStallLift: 0.35
+  mouseSensitivity: 0.15
+  maxAimPitch: 80
+  maxAimConeAngle: 55
+  bankGain: 2.5
+  maxBankAngle: 80
+  pitchGain: 1
+  rollKp: 0.025
+  rollKd: 0.004
+  pitchKp: 0.05
+  pitchKd: 0.008
+  yawKp: 0.01
+  yawKd: 0.01
+  coordinationStrength: 0.1
+  turnCompensationStrength: 0.12
+  rollAlignmentFloor: 0.35
+  maxRollRate: 200
+  rollAuthority: 1400
+  rollDamping: 6
+  maxPitchRate: 60
+  pitchAuthority: 400
+  pitchDamping: 5
+  maxYawRate: 25
+  yawAuthority: 150
+  yawDamping: 4
+  minimumControlSpeed: 20
+  fullControlSpeed: 70
+  minimumArcadeAuthority: 0.35
+  maxHealth: 30
+  damagePerHit: 5
+  fireRate: 20
+  muzzleSpeed: 500
+  projectileLifetime: 2
+  crosshairDistance: 500

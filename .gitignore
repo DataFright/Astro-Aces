@@ -1,0 +1,48 @@
+# Unity generated
+Library/
+Temp/
+Logs/
+Obj/
+obj/
+Build/
+Builds/
+UserSettings/
+MemoryCaptures/
+Recordings/
+
+# Unity crash/analysis
+sysinfo.txt
+*.stackdump
+
+# Visual Studio / Rider / VS Code caches
+.vs/
+.idea/
+*.csproj.user
+*.sln.DotSettings.user
+
+# IDE project files Unity regenerates from .asmdef on open — not source
+*.csproj
+*.sln
+*.slnx
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# UTI telemetry output (large, regenerated every Play session, not source)
+UTI/BeanLogs/
+UTI/BeanSnapshots/
+
+# Third-party Asset Store packs — kept on disk, not in git. These are used in the project
+# but their licenses don't permit redistributing the raw files, and this repo is public.
+# Re-import from the Asset Store locally if you're setting this project up fresh.
+Assets/Dynamic Music/
+Assets/Dynamic Music.meta
+Assets/BTM_Assets/
+Assets/BTM_Assets.meta
+Assets/Casual Game Sounds U6/
+Assets/Casual Game Sounds U6.meta
+Assets/Omega_fighterG/
+Assets/Omega_fighterG.meta
+Assets/SimpleNaturePack/
+Assets/SimpleNaturePack.meta
